@@ -1,0 +1,25 @@
+//@version=5
+strategy("TQQQ Trading Strategy", overlay=true)
+
+// Retrieve previous day's close and today's open
+prev_close = request.security(syminfo.tickerid, "D", close[1])
+today_open = open
+
+// Calculate the growth from the previous day
+previous_growth = (prev_close - close[1]) / close[1]
+
+// Determine the trading position based on previous day's growth
+if (previous_growth < 0)
+    // Negative growth: go long
+    strategy.entry("Long", strategy.long, 100, when=strategy.opentrades == 0)
+else
+    // Positive growth: go short
+    strategy.entry("Short", strategy.short, 100, when=strategy.opentrades == 0)
+
+// Close positions at the end of the day
+strategy.close("Long", when=(hour == 15 and minute == 59))
+strategy.close("Short", when=(hour == 15 and minute == 59))
+
+// Plotting the entries and exits
+plotshape(series=strategy.opentrades != 0, location=location.abovebar, color=color.green, style=shape.labelup, text="Entry")
+plotshape(series=(hour == 15 and minute == 59) and strategy.opentrades != 0, location=location.belowbar, color=color.red, style=shape.labeldown, text="Exit")
